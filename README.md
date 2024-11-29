@@ -112,6 +112,12 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
   - Click **Apply & Save**.
   - **Trigger the build to push the Docker image to the Docker registry.**
   - Add a step to deploy the container on the Worker node using Ansible playbook.
+    #### Additional Notes
+- **Permissions Issue with Docker:** <br>
+   If you encounter a permissions error with the Docker socket, run:
+  ```bash
+  sudo chmod 777 /var/run/docker.sock
+  ```
 
 ## 6. Create Ansible Playbook
  On the Master node, create a playbook file (`devtask.yml`) for container management:
