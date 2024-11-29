@@ -15,6 +15,7 @@ This project demonstrates the deployment of a finance.war web application using 
 - 3. **Setup Docker & Docker Compose**
   - Follow standard Installation
   [Install Docker & Docker Compose](https://github.com/Mallick17/Docker.git)
+  - Login Docker in the Linux Terminal
 - 4. **Set Up Ansible**
   - Install and configure Ansible on the Master node to manage the Worker node.Follow standard Installation
   [Install Ansible & Configure](https://github.com/Mallick17/Ansible.git)
