@@ -36,7 +36,7 @@ This project demonstrates the deployment of a finance.war web application using 
     ```bash
     sudo cat /var/lib/jenkins/secrets/initialAdminPassword
     ```
-## Configure Jenkins
+## 3. Configure Jenkins
 ### 1. Install Maven Plugin in Jenkins
 To build Java projects with Maven, you must install the Maven plugin in Jenkins.
 - Log in to Jenkins.
@@ -60,7 +60,7 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
   - Click `Test Configuration` and ensure it is successful.
 - **Apply and save** the configuration.
 
-## Pipeline Configuration
+## 4. Pipeline Configuration
 1. **Create a Freestyle Job**
 - On the **Jenkins dashboard**, click **New Item**.
 - Enter the name `dev_deploy`, choose **Freestyle project**, and click **OK**.
@@ -76,7 +76,7 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
   - Click **Apply & Save**.
   - *Trigger the build to generate the WAR file.*
     
-## Deploy Application
+## 5. Deploy Application
 ### 1. Prepare Dockerfile
 - Log in as the `ansible` user and create a Dockerfile:
   ```bash
@@ -113,7 +113,7 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
   - **Trigger the build to push the Docker image to the Docker registry.**
   - Add a step to deploy the container on the Worker node using Ansible playbook.
 
-## Create Ansible Playbook
+## 6. Create Ansible Playbook
  On the Master node, create a playbook file (`devtask.yml`) for container management:
  ```yaml
 ---
@@ -133,7 +133,7 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
       command: docker run -it -d --name webapp -p 8090:8080 mallick17/webap
    ```
 
-## Final Pipeline Execution
+## 7. Final Pipeline Execution
 - Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
   - Set **SSH Server** to `Ansible`
   - Set **Exec Command** to:
@@ -143,7 +143,7 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
   - Click **Apply & Save**.
   - *Trigger the build to deploy the Docker container using the Ansible playbook.*
  
-## Access the Application
+## 8. Access the Application
 - Copy the **Public IPv4** address of the **Worker node**.
 - Access the application on the browser:
   ```vbnet
