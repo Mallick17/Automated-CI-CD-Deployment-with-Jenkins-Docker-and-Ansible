@@ -90,6 +90,73 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
   COPY ./finance.war /usr/local/tomcat/webapps
   ```
 ### 2. Configure Additional Build Steps in Jenkins
+- Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
+  - Set **SSH Server** to `Ansible`
+  - Set **Transfer set** to `**/*.war`
+  - Set **Remove prefix** to `target`
+  - Click **Apply & Save**.
+  - **Trigger the build to transfer the `WAR` file to the Ansible server**.
+- Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
+  - Set **SSH Server** to `Ansible`
+  - Set **Transfer set** to `Dockerfile`
+  - Click **Apply & Save**.
+  - **Trigger the build to transfer the `Dockerfile` to the Ansible server.**
+- Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
+  - Set **SSH Server** to `Ansible`
+  - Set **Exec Command** to:
+    ```bash
+    docker build -t mallick17/webap .
+    docker push mallick17/webap
+    docker rmi mallick17/webap
+    ```
+  - Click **Apply & Save**.
+  - **Trigger the build to push the Docker image to the Docker registry.**
+  - Add a step to deploy the container on the Worker node using Ansible playbook.
 
+## Create Ansible Playbook
+ On the Master node, create a playbook file (`devtask.yml`) for container management:
+ ```yaml
+---
+- name: Webapp Playbook
+  hosts: mallick
+  user: ansible
+  become: yes
+  connection: ssh
+  tasks:
+    - name: Remove existing Docker image
+      command: docker rmi -f mallick17/webap
+
+    - name: Remove existing container
+      command: docker rm -f webapp
+
+    - name: Run a new container
+      command: docker run -it -d --name webapp -p 8090:8080 mallick17/webap
+   ```
+
+## Final Pipeline Execution
+- Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
+  - Set **SSH Server** to `Ansible`
+  - Set **Exec Command** to:
+  ```bash
+  ansible-playbook /home/ansible/devtask.yml
+  ```
+  - Click **Apply & Save**.
+  - *Trigger the build to deploy the Docker container using the Ansible playbook.*
+ 
+## Access the Application
+- Copy the **Public IPv4** address of the **Worker node**.
+- Access the application on the browser:
+  ```vbnet
+  http://<Public IPv4>:8090/finance
+  ```
+  ---
+  ## Summary
+  - This deployment setup automates the process of:
+    - Building the application using Jenkins.
+    - Packaging it into a Docker image.
+    - Deploying the container using Ansible.
+  - It provides a robust CI/CD pipeline for consistent and automated deployment.
+
+    
 
 
