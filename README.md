@@ -5,18 +5,21 @@ This project demonstrates the deployment of a finance.war web application using 
 # Steps for Deployment
 ## 1. Install Required Tools
 As the `root` user:
-- Install Java 17:
+- a. Install Java 17:
   ```bash
   yum install java-17* -y
   ```
-- Install Git:
+- b. Install Git:
   ```bash
   yum install git -y
   ```
-- Setup Docker & Docker Compose
+- c. Setup Docker & Docker Compose
   - Follow standard Installation
   [Install Docker & Docker Compose](https://github.com/Mallick17/Docker.git)
-- Installing Jenkins
+- d. Set Up Ansible
+  - Install and configure Ansible on the Master node to manage the Worker node.Follow standard Installation
+  [Install Ansible & Configure](https://github.com/Mallick17/Ansible.git)
+- e. Installing Jenkins
   - To install Jenkins on a Red Hat-based system, prefer jenkins installation guide for Red Hat [Jenkins Installation page](https://www.jenkins.io/doc/book/installing/linux/#long-term-support-release-3)
   - Enable and Start Jenkins<br>
     Enable Jenkins to start on boot, and start the Jenkins service immediately.
