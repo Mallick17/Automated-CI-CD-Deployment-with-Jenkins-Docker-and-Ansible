@@ -1,5 +1,6 @@
 # Complete Documentation: Jenkins Pipeline for Automated Docker Deployment with Ansible
 This documentation provides a detailed step-by-step guide to set up a Jenkins pipeline for automating Docker image building, pushing to Docker Hub, and deploying a web application using Ansible.
+- Note: [For more simplified automation deployment. Click Here.](https://github.com/Mallick17/Automated-CI-CD-Deployment-with-Jenkins-Docker-and-Ansible/blob/main/README.md#automated-deployment-with-jenkins-docker-and-ansible)
 
 # 1. Prerequisites
 ## Installation on Root User
