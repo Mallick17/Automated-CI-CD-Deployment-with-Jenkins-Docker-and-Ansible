@@ -1,7 +1,6 @@
-# Automated Deployment with Jenkins, Docker and Ansible
-This documentation explains the steps followed for deploying a project using Docker, Ansible, and Jenkins, including the configuration of tools and execution of a pipeline for a complete automation workflow.
-### Overview
-This project demonstrates the deployment of a finance.war web application using Jenkins, Docker, Tomcat, and Ansible. The application is built and packaged in Jenkins, deployed using Docker, and hosted on a Tomcat server. The deployed application is accessible via a public IP and port.
+# Complete Documentation: Jenkins Pipeline for Automated Docker Deployment with Ansible
+This documentation provides a detailed step-by-step guide to set up a Jenkins pipeline for automating Docker image building, pushing to Docker Hub, and deploying a web application using Ansible.
+
 # 1. Prerequisites
 ## Installation on Root User
 - 1. **Install Java 17**:
@@ -70,82 +69,98 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
   - Under **Source Code Management**, select **Git** and *provide the repository URL*.
   - Click **Apply & Save**.
   - Click **Build Now**
-3. **Build Steps**
+  - **Git File Structure:**
+    - Ensure the repository contains
+      - pom.xml
+      - src (source code)
+      - Dockerfile
+        ```dockerfile
+        FROM tomcat:9-jre9
+        MAINTAINER "gyanaranjanmallick444@gmail.com"
+        COPY ./live.war /usr/local/tomcat/webapps
+        ```
+
+## 5. Build Steps
+### Step 5.1: Maven Build
+- Add a Build Step:
 - Under **Build Steps**, click **Add build step → Invoke top-level Maven targets**.
   - Set **Maven Version** to the version installed (e.g., `Maven`).
   - Set **Goals** to `clean package`.
   - Click **Apply & Save**.
   - *Trigger the build to generate the WAR file.*
     
-## 5. Deploy Application
-### 1. Prepare Dockerfile
-- Log in as the `ansible` user and create a Dockerfile:
-  ```bash
-  su - ansible
-  vi Dockerfile
-  ```
-  Contents of `Dockerfile`:
-  ```dockerfile
-  FROM tomcat:9-jre9
-  MAINTAINER "gyanaranjanmallick444@gmail.com"
-  COPY ./finance.war /usr/local/tomcat/webapps
-  ```
-### 2. Configure Additional Build Steps in Jenkins
+### Step 5.2: Transfer WAR File to Ansible Node
+- Add another Build Step:
 - Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
   - Set **SSH Server** to `Ansible`
   - Set **Transfer set** to `**/*.war`
   - Set **Remove prefix** to `target`
   - Click **Apply & Save**.
   - **Trigger the build to transfer the `WAR` file to the Ansible server**.
+### Step 5.3: Transfer Dockerfile
+- Add another Build Step:
 - Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
   - Set **SSH Server** to `Ansible`
   - Set **Transfer set** to `Dockerfile`
   - Click **Apply & Save**.
   - **Trigger the build to transfer the `Dockerfile` to the Ansible server.**
-- Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
-  - Set **SSH Server** to `Ansible`
-  - Set **Exec Command** to:
-    ```bash
-    docker build -t mallick17/webap .
-    docker push mallick17/webap
-    docker rmi mallick17/webap
-    ```
-  - Click **Apply & Save**.
-  - **Trigger the build to push the Docker image to the Docker registry.**
-  - Add a step to deploy the container on the Worker node using Ansible playbook.
-    #### Additional Notes
-    - **Permissions Issue with Docker:** <br>
-     If you encounter a permissions error with the Docker socket, run:
-    ```bash
-    sudo chmod 777 /var/run/docker.sock
-    ```
 
+### Step 5.4: Build Docker Image
+- 1. **In Dockerfile Build Step**
+- In **Transfer set** to `Dockerfile`
+- **Exec Command**:
+  ```bash
+  docker build -t mallick17/webproject .
+  docker push mallick17/webproject
+  ```
+- Click **Apply & Save**.
+-  **Trigger the build to  create `Dockerfile` Image and Push the image to Docker Hub.**
+- 2. **Update the build step to use dynamic naming**
+     ```bash
+     docker build -t $JOB_NAME:v1.$BUILD_ID .
+     docker tag $JOB_NAME:v1.$BUILD_ID mallick17/$JOB_NAME:v1.$BUILD_ID
+     docker tag $JOB_NAME:v1.$BUILD_ID mallick17/$JOB_NAME:latest  //>> apply save >> build now
+     docker push mallick17/$JOB_NAME:v1.$BUILD_ID
+     docker push mallick17/$JOB_NAME:latest   //>> apply save >> build now
+     docker rmi -f $JOB_NAME:v1.$BUILD_ID
+     docker rmi -f mallick17/$JOB_NAME:latest   //>> apply save >> build now
+     ```
+  - Click **Apply & Save**.
+### Step 5.5: Clean Docker Environment
+- Ensure no containers or images with the same name exist
+  ```
+  docker rmi -f $(docker images -q)  ##deletes all the images
+  ```
 ## 6. Create Ansible Playbook
  On the Master node, create a playbook file (`devtask.yml`) for container management:
- ```yaml
+ - 6.1. Create an Ansible playbook on the master node:
+ ```bash
+ vi /home/ansible/task.yml
+```
+**Playbook Content**
+```yaml
 ---
-- name: Webapp Playbook
+- name: webapp playbook
   hosts: mallick
   user: ansible
   become: yes
   connection: ssh
   tasks:
-    - name: Remove existing Docker image
-      command: docker rmi -f mallick17/webap
+    - name: remove image
+      command: docker rmi -f mallick17/webproject:latest
+    - name: remove container
+      command: docker rm -f webproject
+    - name: run a container
+      command: docker run -it -d --name webapp -p 8090:8080 mallick17/webproject:latest
+```
 
-    - name: Remove existing container
-      command: docker rm -f webapp
-
-    - name: Run a new container
-      command: docker run -it -d --name webapp -p 8090:8080 mallick17/webap
-   ```
-
-## 7. Final Pipeline Execution
+## 7. Final Pipeline Execution Deploy with Ansible
+- Add another Build Step
 - Under **Build Steps**, click **Add build step → Send files or execute commands over SSH.**
   - Set **SSH Server** to `Ansible`
   - Set **Exec Command** to:
   ```bash
-  ansible-playbook /home/ansible/devtask.yml
+  ansible-playbook /home/ansible/task.yml
   ```
   - Click **Apply & Save**.
   - *Trigger the build to deploy the Docker container using the Ansible playbook.*
@@ -164,6 +179,9 @@ To build Java projects with Maven, you must install the Maven plugin in Jenkins.
     - Deploying the container using Ansible.
   - It provides a robust CI/CD pipeline for consistent and automated deployment.
 
-    
-
-
+  #### Additional Notes
+    - **Permissions Issue with Docker:** <br>
+     If you encounter a permissions error with the Docker socket, run:
+    ```bash
+    sudo chmod 777 /var/run/docker.sock
+    ```
